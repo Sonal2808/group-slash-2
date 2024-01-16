@@ -1,0 +1,1416 @@
+Index: roomranger/src/main/resources/application.properties
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+>\r\n
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>ISO-8859-1
+===================================================================
+diff --git a/roomranger/src/main/resources/application.properties b/roomranger/src/main/resources/application.properties
+--- a/roomranger/src/main/resources/application.properties	(revision 55027fac7c86c4e031a0a122ef39425594194ece)
++++ b/roomranger/src/main/resources/application.properties	(date 1705105182535)
+@@ -1,1 +1,17 @@
++spring.datasource.url=jdbc:mysql://localhost:3306/roomranger
++spring.datasource.username=roomranger@1
++spring.datasource.password=roomranger@1
++
++# Specify the DBMS
++spring.jpa.database = MYSQL
++
++# Show or not log for each sql query
++spring.jpa.show-sql = false
++
++# Hibernate ddl auto (create, create-drop, update)
++spring.jpa.hibernate.ddl-auto = update
++
++# Use spring.jpa.properties.* for Hibernate native properties (the prefix is
++# stripped before adding them to the entity manager)
++spring.jpa.properties.hibernate.dialect = org.hibernate.dialect.MySQL8Dialect
+ 
+Index: roomranger/src/main/java/org/launchcode/roomranger/models/AbstractEntity.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/roomranger/src/main/java/org/launchcode/roomranger/models/AbstractEntity.java b/roomranger/src/main/java/org/launchcode/roomranger/models/AbstractEntity.java
+new file mode 100644
+--- /dev/null	(date 1705120826970)
++++ b/roomranger/src/main/java/org/launchcode/roomranger/models/AbstractEntity.java	(date 1705120826970)
+@@ -0,0 +1,30 @@
++package org.launchcode.roomranger.models;
++
++import javax.persistence.GeneratedValue;
++import javax.persistence.Id;
++import javax.persistence.MappedSuperclass;
++import java.util.Objects;
++
++@MappedSuperclass
++public abstract class AbstractEntity {
++    @Id
++    @GeneratedValue
++    int id;
++
++    public int getId() {
++        return id;
++    }
++
++    @Override
++    public boolean equals(Object o) {
++        if (this == o) return true;
++        if (o == null || getClass() != o.getClass()) return false;
++        AbstractEntity entity = (AbstractEntity) o;
++        return id == entity.id;
++    }
++
++    @Override
++    public int hashCode() {
++        return Objects.hash(id);
++    }
++}
+Index: roomranger/src/main/java/org/launchcode/roomranger/models/BCryptPasswordEncoder.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/roomranger/src/main/java/org/launchcode/roomranger/models/BCryptPasswordEncoder.java b/roomranger/src/main/java/org/launchcode/roomranger/models/BCryptPasswordEncoder.java
+new file mode 100644
+--- /dev/null	(date 1705120877256)
++++ b/roomranger/src/main/java/org/launchcode/roomranger/models/BCryptPasswordEncoder.java	(date 1705120877256)
+@@ -0,0 +1,11 @@
++package org.launchcode.roomranger.models;
++
++public class BCryptPasswordEncoder {
++    public String encode(String password) {
++        return password;
++    }
++
++    public boolean matches(String password, String pwHash) {
++        return false;
++    }
++}
+\ No newline at end of file
+Index: roomranger/src/main/java/org/launchcode/roomranger/models/User.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/roomranger/src/main/java/org/launchcode/roomranger/models/User.java b/roomranger/src/main/java/org/launchcode/roomranger/models/User.java
+new file mode 100644
+--- /dev/null	(date 1705120758521)
++++ b/roomranger/src/main/java/org/launchcode/roomranger/models/User.java	(date 1705120758521)
+@@ -0,0 +1,34 @@
++package org.launchcode.roomranger.models;
++
++import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
++
++import javax.persistence.Entity;
++import javax.validation.constraints.NotNull;
++
++
++@Entity
++public class User extends AbstractEntity {
++
++    @NotNull
++    private String username;
++
++    @NotNull
++    private String pwHash;
++
++    private static final BCryptPasswordEncoder encoder = new BCryptPasswordEncoder();
++
++    public User() {}
++
++    public User(String username, String password) {
++        this.username = username;
++        this.pwHash = encoder.encode(password);
++    }
++
++    public String getUsername() {
++        return username;
++    }
++
++    public boolean isMatchingPassword(String password) {
++        return encoder.matches(password, pwHash);
++    }
++}
+Index: roomranger/src/main/java/org/launchcode/roomranger/models/Author.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/roomranger/src/main/java/org/launchcode/roomranger/models/Author.java b/roomranger/src/main/java/org/launchcode/roomranger/models/Author.java
+new file mode 100644
+--- /dev/null	(date 1705120785153)
++++ b/roomranger/src/main/java/org/launchcode/roomranger/models/Author.java	(date 1705120785153)
+@@ -0,0 +1,84 @@
++package org.launchcode.roomranger.models;
++
++import javax.persistence.Entity;
++import javax.validation.constraints.NotBlank;
++
++
++public class Author {
++
++    @NotBlank
++    private String name;
++
++    private String imageUrl;
++
++    @NotBlank
++    private String descriptionOfFeatures;
++
++    @NotBlank
++    private String bio;
++
++    private String linkedInUrl;
++
++    private String gitHubUrl;
++
++    public Author(){
++    }
++
++    public Author(String name, String imageUrl, String descriptionOfFeatures, String bio, String linkedInUrl, String gitHubUrl) {
++        this.name = name;
++        this.imageUrl = imageUrl;
++        this.descriptionOfFeatures = descriptionOfFeatures;
++        this.bio = bio;
++        this.linkedInUrl = linkedInUrl;
++        this.gitHubUrl= gitHubUrl;
++
++    }
++
++    public String getName() {
++        return name;
++    }
++
++    public void setName(String name) {
++        this.name = name;
++    }
++
++    public String getImageUrl() {
++        return imageUrl;
++    }
++
++    public void setImageUrl(String imageUrl) {
++        this.imageUrl = imageUrl;
++    }
++
++    public String getDescriptionOfFeatures() {
++        return descriptionOfFeatures;
++    }
++
++    public void setDescriptionOfFeatures(String descriptionOfFeatures) {
++        this.descriptionOfFeatures = descriptionOfFeatures;
++    }
++
++    public String getBio() {
++        return bio;
++    }
++
++    public void setBio(String bio) {
++        this.bio = bio;
++    }
++
++    public String getLinkedInUrl() {
++        return linkedInUrl;
++    }
++
++    public void setLinkedInUrl(String linkedInUrl) {
++        this.linkedInUrl = linkedInUrl;
++    }
++
++    public String getGitHubUrl() {
++        return gitHubUrl;
++    }
++
++    public void setGitHubUrl(String gitHubUrl) {
++        this.gitHubUrl = gitHubUrl;
++    }
++}
+Index: roomranger/src/main/java/org/launchcode/roomranger/controllers/AuthenticationController.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/roomranger/src/main/java/org/launchcode/roomranger/controllers/AuthenticationController.java b/roomranger/src/main/java/org/launchcode/roomranger/controllers/AuthenticationController.java
+new file mode 100644
+--- /dev/null	(date 1705121257669)
++++ b/roomranger/src/main/java/org/launchcode/roomranger/controllers/AuthenticationController.java	(date 1705121257669)
+@@ -0,0 +1,168 @@
++package org.launchcode.roomranger.controllers;
++
++import org.launchcode.roomranger.data.ParentRepository;
++import org.launchcode.roomranger.data.UserRepository;
++import org.launchcode.roomranger.models.*;
++import org.launchcode.roomranger.models.dto.LoginFormDTO;
++import org.launchcode.roomranger.models.dto.RegisterFormDTO;
++import org.springframework.beans.factory.annotation.Autowired;
++import org.springframework.stereotype.Controller;
++import org.springframework.ui.Model;
++import org.springframework.validation.Errors;
++import org.springframework.web.bind.annotation.GetMapping;
++import org.springframework.web.bind.annotation.ModelAttribute;
++import org.springframework.web.bind.annotation.PostMapping;
++
++import javax.servlet.http.HttpServletRequest;
++import javax.servlet.http.HttpSession;
++import javax.validation.Valid;
++import java.util.Optional;
++
++@Controller
++public class AuthenticationController {
++
++    @Autowired
++    UserRepository userRepository;
++
++    @Autowired
++    ParentRepository parentRepository;
++
++    private static final String userSessionKey = "user";
++
++    public User getUserFromSession(HttpSession session) {
++        Integer userId = (Integer) session.getAttribute(userSessionKey);
++        if (userId == null) {
++            return null;
++        }
++
++        Optional<User> user = userRepository.findById(userId);
++
++        if (user.isEmpty()) {
++            return null;
++        }
++
++        return user.get();
++    }
++
++    public Parent getParentFromSession(HttpSession session) {
++        Integer parentId = (Integer) session.getAttribute(userSessionKey);
++        if (parentId == null) {
++            return null;
++        }
++
++        Optional<User> user = userRepository.findById(parentId);
++
++        if (user.isEmpty()) {
++            return null;
++        }
++        if (user.get() instanceof ParentUser) {
++            ParentUser parentUser = (ParentUser) user.get();
++            return parentUser.getParent();
++        }
++        return null;
++    }
++
++    public Child getChildFromSession(HttpSession session) {
++        Integer childId = (Integer) session.getAttribute(userSessionKey);
++        if (childId == null) {
++            return null;
++        }
++
++        Optional<User> user = userRepository.findById(childId);
++
++        if (user.isEmpty()) {
++            return null;
++        }
++        if (user.get() instanceof ChildUser) {
++            ChildUser childUser = (ChildUser) user.get();
++            return childUser.getChild();
++        }
++        return null;
++    }
++
++
++
++    private static void setUserInSession(HttpSession session, User user) {
++        session.setAttribute(userSessionKey, user.getId());
++    }
++
++    @GetMapping("/register")
++    public String displayRegistrationForm(Model model) {
++        model.addAttribute(new RegisterFormDTO());
++        model.addAttribute("title", "Register");
++        return "register";
++    }
++
++    @PostMapping("/register")
++    public String processRegistrationForm(@ModelAttribute @Valid RegisterFormDTO registerFormDTO, Errors errors, HttpServletRequest request, Model model) {
++
++        if (errors.hasErrors()) {
++            model.addAttribute("title", "Register");
++            return "register";
++        }
++
++        User existingUser = userRepository.findByUsername(registerFormDTO.getUsername());
++
++        if (existingUser != null) {
++            errors.rejectValue("username", "username.alreadyexists", "A user with that username already exists");
++            model.addAttribute("title", "Register");
++            return "register";
++        }
++
++        String password = registerFormDTO.getPassword();
++        String verifyPassword = registerFormDTO.getVerifyPassword();
++        if (!password.equals(verifyPassword)) {
++            errors.rejectValue("password", "passwords.mismatch", "Passwords do not match");
++            model.addAttribute("title", "Register");
++            return "register";
++        }
++
++        ParentUser newParentUser = new ParentUser(registerFormDTO.getUsername(), registerFormDTO.getPassword());
++        userRepository.save(newParentUser);
++        setUserInSession(request.getSession(), newParentUser);
++        Parent newParent = new Parent(registerFormDTO.getFirstName(), registerFormDTO.getLastName(), newParentUser);
++        parentRepository.save(newParent);
++        return "redirect:";
++    }
++
++    @PostMapping("/login")
++    public String processLoginForm(@ModelAttribute @Valid LoginFormDTO loginFormDTO, Errors errors, HttpServletRequest request, Model model) {
++
++        if (errors.hasErrors()) {
++            model.addAttribute("title", "Log In");
++            return "login";
++        }
++
++        User theUser = userRepository.findByUsername(loginFormDTO.getUsername());
++
++
++        if (theUser == null) {
++                errors.rejectValue("username", "user.invalid", "The given username does not exist");
++                model.addAttribute("title", "Log In");
++                return "login";
++            }
++
++            String password = loginFormDTO.getPassword();
++
++            if (!theUser.isMatchingPassword(password)) {
++                errors.rejectValue("password", "password.invalid", "Invalid password");
++                model.addAttribute("title", "Log In");
++                return "login";
++            }
++
++            if (userRepository.findByUsername(loginFormDTO.getUsername()) instanceof ParentUser) {
++                ParentUser theParentUser = (ParentUser) userRepository.findByUsername(loginFormDTO.getUsername());
++                setUserInSession(request.getSession(), theParentUser);}
++            else if (userRepository.findByUsername(loginFormDTO.getUsername()) instanceof ChildUser)  {
++                ChildUser theChildUser = (ChildUser) userRepository.findByUsername(loginFormDTO.getUsername());
++                setUserInSession(request.getSession(), theChildUser);}
++
++            return "redirect:/dashboard";
++    }
++
++    @GetMapping("/logout")
++    public String logout(HttpServletRequest request){
++        request.getSession().invalidate();
++        return "redirect:/";
++    }
++}
+Index: roomranger/src/main/resources/templates/register.html
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/roomranger/src/main/resources/templates/register.html b/roomranger/src/main/resources/templates/register.html
+new file mode 100644
+--- /dev/null	(date 1704911001582)
++++ b/roomranger/src/main/resources/templates/register.html	(date 1704911001582)
+@@ -0,0 +1,52 @@
++<!DOCTYPE html>
++<html lang="en" xmlns:th="http://www.thymeleaf.org/">
++<head th:replace="fragments :: head"></head>
++
++<body>
++
++<header th:replace="fragments :: header"></header>
++
++<main class="container">
++
++   <h1>Register for Treasure Task</h1>
++
++   <form method="post">
++      <div class="form-group">
++         <label>First Name
++            <input class="form-control" th:field="${registerFormDTO.firstName}" />
++         </label>
++         <p class="error" th:errors="${registerFormDTO.firstName}"></p>
++      </div>
++      <div class="form-group">
++         <label>Last Name
++            <input class="form-control" th:field="${registerFormDTO.lastName}" />
++         </label>
++         <p class="error" th:errors="${registerFormDTO.lastName}"></p>
++      </div>
++      <div class="form-group">
++         <label>Username
++            <input class="form-control" th:field="${registerFormDTO.username}" />
++         </label>
++         <p class="error" th:errors="${registerFormDTO.username}"></p>
++      </div>
++      <div class="form-group">
++         <label>Password
++            <input class="form-control" th:field="${registerFormDTO.password}" type="password" />
++         </label>
++         <p class="error" th:errors="${registerFormDTO.password}"></p>
++      </div>
++      <div class="form-group">
++         <label>Verify Password
++            <input class="form-control" th:field="${registerFormDTO.verifyPassword}" type="password" />
++         </label>
++      </div>
++
++      <input type="submit" class="btn btn-primary" value="Register" />
++   </form>
++
++</main>
++
++<footer th:replace="fragments :: footer"></footer>
++
++</body>
++</html>
+\ No newline at end of file
+Index: roomranger/src/main/java/org/launchcode/roomranger/data/UserRepository.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/roomranger/src/main/java/org/launchcode/roomranger/data/UserRepository.java b/roomranger/src/main/java/org/launchcode/roomranger/data/UserRepository.java
+new file mode 100644
+--- /dev/null	(date 1705120990778)
++++ b/roomranger/src/main/java/org/launchcode/roomranger/data/UserRepository.java	(date 1705120990778)
+@@ -0,0 +1,12 @@
++package org.launchcode.roomranger.data;
++
++import org.launchcode.liftoffproject.models.User;
++import org.springframework.data.repository.CrudRepository;
++import org.springframework.stereotype.Repository;
++
++@Repository
++public interface UserRepository extends CrudRepository<User, Integer> {
++
++    User findByUsername(String username);
++
++}
+Index: roomranger/src/main/java/org/launchcode/roomranger/data/ParentRepository.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/roomranger/src/main/java/org/launchcode/roomranger/data/ParentRepository.java b/roomranger/src/main/java/org/launchcode/roomranger/data/ParentRepository.java
+new file mode 100644
+--- /dev/null	(date 1705121003179)
++++ b/roomranger/src/main/java/org/launchcode/roomranger/data/ParentRepository.java	(date 1705121003179)
+@@ -0,0 +1,7 @@
++package org.launchcode.roomranger.data;
++
++import org.launchcode.liftoffproject.models.Parent;
++import org.springframework.data.repository.PagingAndSortingRepository;
++
++public interface ParentRepository extends PagingAndSortingRepository<Parent, Integer> {
++}
+Index: roomranger/build.gradle
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+>plugins {\r\n\tid 'java'\r\n\tid 'org.springframework.boot' version '3.2.1'\r\n\tid 'io.spring.dependency-management' version '1.1.4'\r\n}\r\n\r\ngroup = 'org.launchcode'\r\nversion = '0.0.1-SNAPSHOT'\r\n\r\njava {\r\n\tsourceCompatibility = '17'\r\n}\r\n\r\nrepositories {\r\n\tmavenCentral()\r\n}\r\n\r\ndependencies {\r\n\timplementation 'org.springframework.boot:spring-boot-starter-web'\r\n\timplementation 'org.springframework.boot:spring-boot-starter-data-jpa'\r\n\timplementation 'org.springframework.boot:spring-boot-starter-thymeleaf'\r\n\timplementation 'org.springframework.boot:spring-boot-starter-validation'\r\n\timplementation 'mysql:mysql-connector-java:8.0.28'\r\n\timplementation 'org.springframework.security:spring-security-crypto'\r\n\tdevelopmentOnly 'org.springframework.boot:spring-boot-devtools'\r\n\ttestImplementation 'org.springframework.boot:spring-boot-starter-test'\r\n}\r\n\r\ntasks.named('test') {\r\n\tuseJUnitPlatform()\r\n}\r\n
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/roomranger/build.gradle b/roomranger/build.gradle
+--- a/roomranger/build.gradle	(revision 55027fac7c86c4e031a0a122ef39425594194ece)
++++ b/roomranger/build.gradle	(date 1705109672825)
+@@ -16,14 +16,14 @@
+ }
+ 
+ dependencies {
+-	implementation 'org.springframework.boot:spring-boot-starter-web'
+-	implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
++	implementation 'org.springframework.boot:spring-boot-starter-security'
+ 	implementation 'org.springframework.boot:spring-boot-starter-thymeleaf'
+-	implementation 'org.springframework.boot:spring-boot-starter-validation'
+-	implementation 'mysql:mysql-connector-java:8.0.28'
+-	implementation 'org.springframework.security:spring-security-crypto'
++	implementation 'org.springframework.boot:spring-boot-starter-web'
++	implementation 'org.thymeleaf.extras:thymeleaf-extras-springsecurity6'
+ 	developmentOnly 'org.springframework.boot:spring-boot-devtools'
++	runtimeOnly 'com.mysql:mysql-connector-j'
+ 	testImplementation 'org.springframework.boot:spring-boot-starter-test'
++	testImplementation 'org.springframework.security:spring-security-test'
+ }
+ 
+ tasks.named('test') {
+Index: roomranger/src/main/resources/templates/dashfragment.html
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/roomranger/src/main/resources/templates/dashfragment.html b/roomranger/src/main/resources/templates/dashfragment.html
+new file mode 100644
+--- /dev/null	(date 1704911001578)
++++ b/roomranger/src/main/resources/templates/dashfragment.html	(date 1704911001578)
+@@ -0,0 +1,81 @@
++<!DOCTYPE html>
++<html lang="en" xmlns:th="http://www.thymeleaf.org/">
++<head th:fragment="head">
++  <meta charset="UTF-8"/>
++  <title>Liftoff Project</title>
++
++
++  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
++  <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.min.js"></script>
++  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css">
++
++  <link rel="stylesheet" th:href="@{/styles.css}">
++  <link rel="preconnect" href="https://fonts.googleapis.com">
++  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
++  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300;1,400&family=IM+Fell+DW+Pica:ital@1&family=IM+Fell+English+SC&family=IM+Fell+Great+Primer+SC&family=Pirata+One&family=Poppins:wght@300&family=Syne&display=swap" rel="stylesheet">
++
++
++  <!-- datepicker >
++  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.9.0/css/bootstrap-datepicker.min.css">
++  <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.9.0/js/bootstrap-datepicker.min.js"></script-->
++
++
++
++  <link rel="stylesheet" href="https://code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css">
++  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
++  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
++  <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.1/moment.min.js"></script>
++
++
++
++</head>
++
++<body>
++
++<header th:fragment2="header">
++  <div class="d-flex flex-wrap align-items-center justify-content-center justify-content-md-between py-2">
++    <div class="col-md-3 mb-md-0 ml-3">
++      <a href="/" class="d-inline-flex link-body-emphasis text-decoration-none">
++        <img th:src="@{/images/treasureTask-logo.jpg}" alt="Logo Image" height="75">
++      </a>
++    </div>
++
++
++
++    <!-- Avatar Display >
++    <div id="selectedAvatar" class="avatar-selected">
++      <h2>Your Avatar</h2>
++      <img alt="Selected Avatar" class="avatar" th:src="${child.avatar}">
++    </div--->
++
++    <!-- Points Display -->
++    <div class="points">
++      <h2>Points: <span th:text="${child.points}"></span></h2>
++    </div>
++
++
++    <!-- Redeem Reward Button -->
++    <form th:action="@{/redeem}" method="post">
++      <input type="hidden" name="childId" th:value="${child.id}" />
++      <button type="submit" class="btn btn-primary" th:disabled="${child.points < 10}">
++        Redeem Points
++      </button>
++    </form>
++
++    <div class="col-md-3 text-end mr-3" style="text-align: right;">
++      <a href="/logout"><span class="btn btn-outline-primary me-2 login-btn">Sign Out</span></a>
++      <!--a href="/register"><span class="btn btn-primary register-btn">Register</span></a-->
++    </div>
++  </div>
++</header>
++
++<footer class="py-3">
++  <ul class="nav justify-content-center pb-3">
++    <li class="nav-item"><a href="/"><img th:src="@{/images/treasureTask-logo.jpg}" alt="Logo Image" height="75"></a></li>
++  </ul>
++  <p class="text-center text-body-secondary mb-0" style="font-family: 'Pirata One', cursive !important; color: white !important">Copyright &copy; TreasureTask | <a href="https://www.vecteezy.com/free-vector/pirate" target="_blank">Pirate Vectors by Vecteezy</a></p>
++</footer>
++
++</body>
++
++</html>
+\ No newline at end of file
+Index: roomranger/src/main/java/org/launchcode/roomranger/models/dto/LoginFormDTO.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/roomranger/src/main/java/org/launchcode/roomranger/models/dto/LoginFormDTO.java b/roomranger/src/main/java/org/launchcode/roomranger/models/dto/LoginFormDTO.java
+new file mode 100644
+--- /dev/null	(date 1705120264935)
++++ b/roomranger/src/main/java/org/launchcode/roomranger/models/dto/LoginFormDTO.java	(date 1705120264935)
+@@ -0,0 +1,35 @@
++package org.launchcode.roomranger.models.dto;
++
++import javax.validation.constraints.NotBlank;
++import javax.validation.constraints.NotNull;
++import javax.validation.constraints.Size;
++
++public class LoginFormDTO {
++
++    @NotNull
++    @NotBlank
++    @Size(min = 3, max = 20, message = "Invalid username. Must be between 3 and 30 characters.")
++    private String username;
++
++    @NotNull
++    @NotBlank
++    @Size(min = 5, max = 20, message = "Invalid password. Must be between 5 and 30 characters.")
++    private String password;
++
++    public String getUsername() {
++        return username;
++    }
++
++    public void setUsername(String username) {
++        this.username = username;
++    }
++
++    public String getPassword() {
++        return password;
++    }
++
++    public void setPassword(String password) {
++        this.password = password;
++    }
++
++}
+Index: roomranger/src/main/java/org/launchcode/roomranger/models/dto/RegisterFormDTO.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/roomranger/src/main/java/org/launchcode/roomranger/models/dto/RegisterFormDTO.java b/roomranger/src/main/java/org/launchcode/roomranger/models/dto/RegisterFormDTO.java
+new file mode 100644
+--- /dev/null	(date 1705120219971)
++++ b/roomranger/src/main/java/org/launchcode/roomranger/models/dto/RegisterFormDTO.java	(date 1705120219971)
+@@ -0,0 +1,41 @@
++package org.launchcode.roomranger.models.dto;
++
++import javax.validation.constraints.NotBlank;
++import javax.validation.constraints.Size;
++
++public class RegisterFormDTO extends LoginFormDTO {
++
++    private String verifyPassword;
++
++    @NotBlank(message = "First Name is required")
++    @Size(max = 50, message = "Name is too long")
++    private String firstName;
++
++    @NotBlank (message = "Last Name is required")
++    @Size (max = 50, message = "Last Name is too long")
++    private String lastName;
++
++    public String getVerifyPassword() {
++        return verifyPassword;
++    }
++
++    public void setVerifyPassword(String verifyPassword) {
++        this.verifyPassword = verifyPassword;
++    }
++
++    public String getFirstName() {
++        return firstName;
++    }
++
++    public void setFirstName(String firstName) {
++        this.firstName = firstName;
++    }
++
++    public String getLastName() {
++        return lastName;
++    }
++
++    public void setLastName(String lastName) {
++        this.lastName = lastName;
++    }
++}
+Index: roomranger/src/main/java/org/launchcode/roomranger/controllers/AboutUsController.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/roomranger/src/main/java/org/launchcode/roomranger/controllers/AboutUsController.java b/roomranger/src/main/java/org/launchcode/roomranger/controllers/AboutUsController.java
+new file mode 100644
+--- /dev/null	(date 1705121257702)
++++ b/roomranger/src/main/java/org/launchcode/roomranger/controllers/AboutUsController.java	(date 1705121257702)
+@@ -0,0 +1,67 @@
++package org.launchcode.roomranger.controllers;
++
++import org.launchcode.roomranger.models.Author;
++import org.springframework.stereotype.Controller;
++import org.springframework.ui.Model;
++import org.springframework.web.bind.annotation.GetMapping;
++
++import java.util.ArrayList;
++import java.util.List;
++
++@Controller
++public class AboutUsController {
++
++    @GetMapping("/aboutUs")
++    public String displayAboutUs(Model model) {
++      List<Author> authors = new ArrayList<>();
++
++        authors.add(new Author(
++              "Darren LaCour ",
++              "/images/creators/pic-of-darren.jpeg",
++              "Backend, User Role Configuration, Creating Crew Members and Chores" ,
++              "Music theorist turned developer. Links below to say hello!",
++                "https://www.linkedin.com/in/darrenlacour/",
++                "https://github.com/lacourd"
++        ));
++
++        authors.add(new Author(
++                "Marcie DeFonce",
++                "/images/creators/pic-of-Marcie.jpeg",
++                "Front-End Development, Reward MVC, User Authentication",
++                "Client-Facing Project Manager and Developer",
++                "https://www.linkedin.com/in/marcie-defonce/",
++                "https://github.com/mdefonce"
++        ));
++        authors.add(new Author(
++                "Audra Hartwell",
++                "/images/creators/pic-of-audra.jpeg",
++                "User Authorization, About the Creators, Rewards Page",
++                "Former teacher turned coder. Check my links to learn more.",
++                "https://www.linkedin.com/in/audra-hartwell-252a66113/",
++                "https://github.com/AudraHartwell"
++        ));
++
++
++        authors.add(new Author(
++                "Mike Zanger",
++                "/images/creators/pic-of-Mike.jpeg",
++                "Backend, Creating Chore Details Page",
++                "Current cook and coder.",
++                "https://www.linkedin.com/in/michael-zanger-ba8b1a287/",
++                "https://github.com/mikezanger"
++        ));
++
++        authors.add(new Author(
++                "Rose Wachira",
++                "/images/creators/pic-of-rose.jpeg",
++                "Backend, DatePicker, Creating Child Dashboard Page",
++                "Dietitian turned developer. Check my links to learn more.",
++                "https://www.linkedin.com/in/rosewachira",
++                "https://github.com/WachiraRose"
++        ));
++
++        model.addAttribute("authors", authors);
++        return "about_us";
++    }
++}
++
+Index: roomranger/src/main/resources/static/styles.css
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/roomranger/src/main/resources/static/styles.css b/roomranger/src/main/resources/static/styles.css
+new file mode 100644
+--- /dev/null	(date 1704911001563)
++++ b/roomranger/src/main/resources/static/styles.css	(date 1704911001563)
+@@ -0,0 +1,452 @@
++body {
++  font-family: 'IM Fell English SC', serif !important;
++}
++
++main {
++  padding-bottom: 3rem;
++  padding-top: 3rem;
++}
++
++.bg-img {
++    background-image: url('/images/treasureTask-bg.jpg');
++    background-size: cover;
++    background-repeat: no-repeat;
++    height: 100vmax;
++    overflow: visible;
++    width: 100%;
++}
++
++.scroll-img {
++    background-image: url(/images/scroll-bg.png);
++    background-size: contain;
++    height: 80vmin;
++    width: 550px;
++    max-width: 90%;
++    background-repeat: no-repeat;
++    overflow: visible;
++    align-items: top;
++    justify-content: center;
++    display: flex !important;
++    padding-top: 5rem;
++}
++
++.hp-about {
++    width: 550px;
++    max-width: 65%;
++    text-align: center;
++    margin-right: 4rem;
++    margin-left: auto;
++    padding-left: 1rem;
++    padding-right: 1.3rem;
++    margin-bottom: 2rem;
++}
++
++.error {
++  color: red;
++}
++
++.form-signin {
++  max-width: 400px;
++  padding: 1rem;
++  background-color: #ffffff94;
++}
++
++.form-signin .form-floating:focus-within {
++  z-index: 2;
++}
++
++.form-signin input[type="text"] {
++  margin-bottom: -1px;
++  border-bottom-right-radius: 0;
++  border-bottom-left-radius: 0;
++}
++
++.form-signin input[type="password"] {
++  margin-bottom: 10px;
++  border-top-left-radius: 0;
++  border-top-right-radius: 0;
++}
++
++p {
++    font-family: 'IM Fell English SC', serif !important;
++}
++
++@media (min-width: 1024px) {
++  p {
++    font-size: calc(16px + 10%);
++  }
++}
++
++@media (max-width: 600px) {
++  p {
++    font-size: calc(14px);
++  }
++  .hp-about {
++    padding-right: 0 !important;
++  }
++  .scroll-img {
++    padding-top: 2rem;
++  }
++}
++
++a.nav-link {
++    font-family: 'Pirata One', cursive;
++    color: white;
++    font-size: xx-large;
++}
++
++a.nav-link:hover {
++    color: grey;
++}
++
++.form-control-dark {
++  border-color: var(--bs-gray);
++}
++.form-control-dark:focus {
++  border-color: #fff;
++  box-shadow: 0 0 0 .25rem rgba(255, 255, 255, .25);
++}
++
++.text-small {
++  font-size: 85%;
++}
++
++.dropdown-toggle:not(:focus) {
++  outline: 0;
++}
++
++header {
++    background-color: #2B2D2F;
++}
++
++footer {
++    background-color: #2B2D2F;
++    position: sticky;
++}
++
++.register-btn {
++    color: #2B2D2F;
++    background-color: white;
++    border-color: white;
++    font-size: x-large;
++    font-family: "Pirata One", cursive;
++}
++
++.register-btn:hover {
++    color: #2B2D2F;
++    background-color: grey;
++    border-color: grey;
++}
++
++.register-btn:active {
++    color: #2B2D2F !important;
++    background-color: grey !important;
++    border-color: grey !important;
++}
++
++.login-btn {
++    color: white;
++    border-color: white;
++    font-size: x-large;
++    font-family: "Pirata One", cursive;
++}
++
++.login-btn:hover {
++    color: #2B2D2F;
++    border-color: #2B2D2F;
++    background-color: white;
++}
++
++.login-btn:active {
++    color: #2B2D2F !important;
++    border-color: #2B2D2F !important;
++    background-color: white !important;
++}
++
++.create-chore-btn {
++    color: #2B2D2F;
++    border: 2px solid black;
++    background-color: white;
++}
++
++/* style for creator page */
++.card-container {
++     justify-content: center;
++     align-items: center;
++     max-width: 1850px;
++   }
++
++
++/* Style for the individual creator card */
++.card {
++  width: 300px;
++  margin-bottom: 20px; /* Add margin between cards */
++  margin-right: 20px
++  box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1); /* Add the box shadow */
++}
++
++/* child dashboard */
++.points{
++    color: 	#FFFFFF;
++    font-size: 26px;
++}
++
++<style th:inline="text">
++
++ body.dashboard{
++     background-color: #f5f5f5;
++     font-family: sans-serif;
++
++ /* Styling for the points display section */
++           /* Style for the Points Display */
++ h2 {
++      font-size: 22px;
++      font-weight: bold;
++      text-align: center;
++      margin-bottom: 10px;
++
++ }
++
++ h2 span {
++
++ }
++
++ /* redeem reward button */
++ .reward-button {
++    text-align: right;
++    margin: 20px auto;
++ }
++
++
++ .reward-button {
++    text-align: center;
++    margin-bottom: 20px;
++ }
++
++ .reward-button a {
++    display: inline-block;
++    padding: 10px 20px;
++    background-color: #3498db;
++    color: #fff;
++    text-decoration: none;
++    border-radius: 5px;
++    cursor: pointer;
++ }
++
++
++ /*  heading */
++ .mwanzo {
++     display: flex;
++     flex-direction: row;
++     justify-content: space-between;
++ }
++
++
++ .mwanzo h3 {
++     float: right;
++     margin-right: 5px;
++     margin-left: 20px;
++ }
++/* Avatar*/
++ img {
++     width: 150px;
++     height: 150px;
++     position: relative;
++ }
++
++ select {
++    position: absolute;
++    top: 0;
++    left: 0;
++    width: 100%;
++    height: 100%;
++    opacity: 0;
++    z-index: 1;
++ }
++
++ select:hover {
++    opacity: 1;
++ }
++
++ img:hover select {
++    opacity: 1;
++    z-index: 2;
++ }
++
++ select {
++    border: none;
++    outline: none;
++    background-color: transparent;
++ }
++
++
++ /*  calendar buttons */
++
++ h2#calenderSelection {
++    text-align: center;
++    color: red;
++
++ }
++
++ #calendar {
++    text-align: center;
++    margin-top: 20px;
++ }
++
++ .button-container {
++    display: flex;
++    justify-content: space-between;
++    max-width: 300px;
++    margin: 0 auto;
++ }
++
++ .day {
++    background-color: lightblue;
++    color: black;
++    border: none;
++    padding: 10px 20px;
++    border-radius: 5px;
++    cursor: pointer;
++ }
++
++ /* Style for the Chores table */
++  #selectedDay{
++    color: #7CFC00;
++  }
++
++
++  table#choresTable {
++    width: 100%;
++    border-collapse: collapse;
++    margin-top: 20px;
++  }
++
++  #choresTable th,
++  #choresTable td {
++    padding: 10px;
++    text-align: left;
++    border-bottom: 1px solid #ccc;
++  }
++
++  #choresTable th {
++    background-color: #f2f2f2;
++  }
++
++  #choresTable tbody tr:nth-child(even) {
++    background-color: #f9f9f9;
++  }
++
++  #choresTable tbody tr:hover {
++    background-color: #f5f5f5;
++  }
++
++  /* Style for the Earned Rewards table */
++ table#earnedRewardsTable {
++    width: 100%;
++    border-collapse: collapse;
++    margin-top: 20px;
++ }
++
++ #earnedRewardsTable th,
++ #earnedRewardsTable td {
++    padding: 10px;
++    text-align: left;
++    border-bottom: 1px solid #ccc;
++ }
++
++ #earnedRewardsTable th {
++    background-color: #f2f2f2;
++ }
++
++ #earnedRewardsTable tbody tr:nth-child(even) {
++    background-color: #f9f9f9;
++ }
++
++ #earnedRewardsTable tbody tr:hover {
++    background-color: #f5f5f5;
++ }
++}
++
++.total-points {
++    text-align: center;
++    font-family: 'Pirata One', cursive;
++    font-size: 6rem;
++    line-height: .7;
++}
++
++.col-md-4 {
++    float: left;
++}
++
++.alt-row {
++    text-align: center;
++    margin-top: 2rem;
++    margin-bottom: 2rem;
++    background-color: #2B2D2F;
++    padding-top: 3rem;
++    padding-bottom: 2rem;
++    color: white;
++}
++
++.alt-row h3, .alt-row table {
++    text-align: center;
++    color: white;
++}
++
++ .flex-container {
++  display: flex;
++  justify-content: space-between;
++}
++
++/* Style for parent reward cards*/
++.inline-form {
++        display: inline-block;
++    }
++
++/*style for child dashboard*/
++.child-view-chores-button {
++    text-align: center;
++    display: block
++}
++
++.date-picker{
++    margin-top: 30px;
++    margin-bottom: 30px;
++}
++
++.child-chore-table{
++    margin-top: 10px;
++}
++
++/*style for comments on chore detail*/
++
++.comment-area {
++    margin: auto;
++    width:70%;
++    padding: 10px;
++    border-radius: 4px;
++    background: #eeeeee;
++    box-shadow: 2px 2px 20px 23px #00000;
++}
++.comment-box {
++    margin: auto;
++    width: 95%;
++    align-items: center;
++    height: auto;
++    padding: 10px;
++    border-radius: 25px;
++    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
++    background-color: #ffffff;
++}
++.comments {
++    font-size: 120%;
++}
++
++.comment-attribution {
++    font-size: 60%;
++    text-align: right;
++}
++
++.section-buffer {
++    padding: 10px;
++}
+\ No newline at end of file
+Index: roomranger/src/main/resources/static/script.js
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/roomranger/src/main/resources/static/script.js b/roomranger/src/main/resources/static/script.js
+new file mode 100644
+--- /dev/null	(date 1704911001562)
++++ b/roomranger/src/main/resources/static/script.js	(date 1704911001562)
+@@ -0,0 +1,1 @@
++let appName = "Liftoff Project";
+\ No newline at end of file
+Index: roomranger/src/main/resources/templates/index.html
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/roomranger/src/main/resources/templates/index.html b/roomranger/src/main/resources/templates/index.html
+new file mode 100644
+--- /dev/null	(date 1704911001580)
++++ b/roomranger/src/main/resources/templates/index.html	(date 1704911001580)
+@@ -0,0 +1,43 @@
++<!DOCTYPE html>
++<html lang="en" xmlns:th="http://www.thymeleaf.org/">
++<head th:replace="fragments :: head"></head>
++
++<body>
++
++<header th:replace="fragments :: header"></header>
++
++<img src="/images/treasureTask-HP-hero.jpg" width="100%">
++
++<div class="bg-img">
++    <h1 hidden>Welcome to Treasure Task</h1>
++
++    <div class="scroll-img m-auto">
++        <p class="hp-about">With Treasure Task, parents can assign chores to their children to monitor weekly tasks. To better encourage children to not only complete their chores but also do them well, each chore can be worth a determined amount of points. Children can collect enough points to redeem rewards set by their parents. Child accounts can be created to help older children keep track of chores and rewards themselves, giving them a sense of responsibility.</p>
++    </div>
++
++
++    <div th:unless="${loggedInUser}" class="form-signin w-100 m-auto modal-content rounded-4 shadow" id="login">
++        <form method="post" th:action="@{/login#login}">
++            <h2 class="mb-2" align="center">Welcome Aboard</h2>
++            <p align="center">Avast, ye landlubbers! Approach the plank and set foot to log in!</p>
++            <div class="form-floating">
++                <label for="floatingUsername" hidden>Username</label>
++                <input type="text" class="form-control" id="floatingUsername" th:field="${loginFormDTO.username}" placeholder="Username">
++                <p class="error" th:errors="${loginFormDTO.username}"></p>
++            </div>
++            <div class="form-floating">
++                <input class="form-control" id="floatingPassword" th:field="${loginFormDTO.password}" type="password" placeholder="Password">
++                <label for="floatingPassword" hidden>Password</label>
++                <p class="error" th:errors="${loginFormDTO.password}"></p>
++            </div>
++
++            <button type="submit" class="btn btn-primary w-100 py-2" value="Log In">LOGIN</button>
++            <p class="mt-3 mb-3 text-body-secondary" align="center">Don't have an account? <a href="/register">Register for one.</a></p>
++        </form>
++    </div>
++
++</div>
++
++<footer th:replace="fragments :: footer"></footer>
++</body>
++</html>
+\ No newline at end of file
+Index: roomranger/src/main/java/org/launchcode/roomranger/controllers/HomeController.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/roomranger/src/main/java/org/launchcode/roomranger/controllers/HomeController.java b/roomranger/src/main/java/org/launchcode/roomranger/controllers/HomeController.java
+new file mode 100644
+--- /dev/null	(date 1705121257692)
++++ b/roomranger/src/main/java/org/launchcode/roomranger/controllers/HomeController.java	(date 1705121257692)
+@@ -0,0 +1,20 @@
++package org.launchcode.roomranger.controllers;
++
++import org.launchcode.roomranger.models.dto.LoginFormDTO;
++import org.springframework.stereotype.Controller;
++import org.springframework.ui.Model;
++import org.springframework.web.bind.annotation.GetMapping;
++import org.springframework.web.bind.annotation.RequestMapping;
++
++@Controller
++public class HomeController {
++
++    @GetMapping
++    public String index(Model model) {
++        model.addAttribute(new LoginFormDTO());
++        return "index";
++    }
++
++
++
++}
+Index: roomranger/src/main/resources/templates/login.html
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/roomranger/src/main/resources/templates/login.html b/roomranger/src/main/resources/templates/login.html
+new file mode 100644
+--- /dev/null	(date 1704911001582)
++++ b/roomranger/src/main/resources/templates/login.html	(date 1704911001582)
+@@ -0,0 +1,43 @@
++<!DOCTYPE html>
++<html lang="en" xmlns:th="http://www.thymeleaf.org/">
++<head th:replace="fragments :: head"></head>
++
++<body>
++
++<header th:replace="fragments :: header"></header>
++
++<img src="/images/treasureTask-HP-hero.jpg" width="100%">
++
++<div class="bg-img">
++   <h1 hidden>Welcome to Treasure Task</h1>
++
++   <div class="scroll-img m-auto">
++      <p class="hp-about">With Treasure Task, parents can assign chores to their children to monitor weekly tasks. To better encourage children to not only complete their chores but also do them well, each chore can be worth a determined amount of points. Children can collect enough points to redeem rewards set by their parents. Child accounts can be created to help older children keep track of chores and rewards themselves, giving them a sense of responsibility.</p>
++   </div>
++
++   <main class="container">
++
++      <form method="post" th:action="@{/login#login}" class="form-signin w-100 m-auto modal-content rounded-4 shadow" id="login">
++         <h2>Login</h2>
++         <div class="form-group">
++            <label hidden>Username</label>
++            <input type="text" class="form-control" th:field="${loginFormDTO.username}" placeholder="Username">
++            <p class="error" th:errors="${loginFormDTO.username}"></p>
++         </div>
++         <div class="form-group">
++            <label hidden>Password</label>
++            <input class="form-control" th:field="${loginFormDTO.password}" type="password" placeholder="Password">
++            <p class="error" th:errors="${loginFormDTO.password}"></p>
++         </div>
++
++         <button type="submit" class="btn btn-primary w-100 py-2" value="Log In">Log in</button>
++         <p class="mt-3 mb-3 text-body-secondary" align="center">Don't have an account? <a href="/register">Register for one.</a></p>
++      </form>
++   </main>
++
++</div>
++
++<footer th:replace="fragments :: footer"></footer>
++
++</body>
++</html>
+\ No newline at end of file
